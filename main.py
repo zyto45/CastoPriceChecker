@@ -1,9 +1,8 @@
 import PySimpleGUI as sg
-import casto as c
+import scrapper as c
 import re
 import pandas as pd
 
-markets_map = c.get_markets()
 header_list = ['Market', 'Price', 'Quantity', 'Shipping methods']
 header_widths = [23, 7, 7, 15]
 df_source = {'Market': [],
@@ -11,15 +10,14 @@ df_source = {'Market': [],
              'Quantity': [],
              'Shipping methods': []}
 df = pd.DataFrame(df_source)
-init_msg = 'Init completed. Enter product id' if len(markets_map) > 0 else 'Failed to init market\'s list'
-init_msg_color = 'green' if len(markets_map) > 0 else 'red'
 
 sg.theme('DefaultNoMoreNagging')
-layout = [[sg.Text(init_msg, text_color=init_msg_color, size=(30, 1), font=('Helvetica', 12, 'bold'),
+layout = [[sg.Text('Select option to start', text_color='green', size=(45, 1), font=('Helvetica', 12, 'bold'),
                    key='MSG')],
-          [sg.Text('Product id:', size=(10, 1)), sg.InputText(size=(30, 1), pad=(15, 0))],
-          [sg.Button('Check', size=(10, 1), key='CHECK', disabled=len(markets_map) == 0),
-           sg.ProgressBar(len(markets_map), orientation='h', size=(20, 20), key='PROGRESS',
+          [sg.Text('Product id:', size=(10, 1)), sg.InputText(size=(30, 1), pad=(15, 0), key='PRODUCT'),
+           sg.Combo([(1, 'Casto'), (2, 'Leroy'), (3, 'OBI')], key='OPTION', enable_events=True)],
+          [sg.Button('Check', size=(10, 1), key='CHECK', disabled=True),
+           sg.ProgressBar(100, orientation='h', size=(20, 20), key='PROGRESS',
                           bar_color=('#082567', '#f0f0f0'))],
           [sg.Table(values=df.values.tolist(),
                     headings=header_list,
@@ -29,11 +27,11 @@ layout = [[sg.Text(init_msg, text_color=init_msg_color, size=(30, 1), font=('Hel
                     num_rows=25,
                     col_widths=header_widths)]]
 
-window = sg.Window('Casto Price Checker', layout)
+window = sg.Window('Price Checker', layout)
 
 
 def validate_input():
-    if re.search("^[0-9]+$", values[0]) is None:
+    if re.search("^[0-9]+$", values['PRODUCT']) is None:
         window['MSG'].update('Product id must be a valid number', text_color='red')
         return False
     else:
@@ -47,6 +45,16 @@ while True:
     if event == sg.WIN_CLOSED or event == 'Cancel':  # if user closes window or clicks cancel
         break
 
+    if event == 'OPTION':
+        markets_map = c.get_markets(values['OPTION'][0])
+        if len(markets_map) == 0:
+            window['MSG'].update('Failed to init market\'s list', text_color='red')
+        else:
+            window['MSG'].update('Market\'s list init completed, enter product id', text_color='green')
+            window['CHECK'].update(disabled=False)
+            window['PRODUCT'].update('')
+            window['PROGRESS'].update(current_count=0, max=len(markets_map))
+
     if event == 'CHECK':
         if validate_input():
             df_source = {'Market': [],
@@ -57,13 +65,12 @@ while True:
             try:
                 for m in markets_map.keys():
                     counter = counter + 1
-                    data = c.get_product_details(str(values[0]), m)
+                    element = c.get_product_details(str(values['PRODUCT']), m, int(values['OPTION'][0]))
                     window['PROGRESS'].update_bar(counter)
                     df_source['Market'].append(markets_map[m])
-                    df_source['Price'].append(float(data['products'][str(values[0])]['price']))
-                    df_source['Quantity'].append(data['products'][str(values[0])]['qty'])
-                    df_source['Shipping methods'].append(
-                        [e[0] for e in data['products'][str(values[0])]['shippingMethods'].items() if e[1] is True])
+                    df_source['Price'].append(element['price'])
+                    df_source['Quantity'].append(element['qty'])
+                    df_source['Shipping methods'].append(element['shippingMethods'])
 
                 df = pd.DataFrame(df_source)
                 df.sort_values(by='Price', ignore_index=True, inplace=True)
