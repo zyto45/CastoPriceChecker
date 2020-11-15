@@ -2,6 +2,7 @@ import config
 import http_client as client
 from lxml import html
 import re
+import json
 
 element = {
     'Price': 0.0,
@@ -64,22 +65,25 @@ def get_product_details_leroy(product_id, market_id):
 
 
 def get_markets_obi():
-    return {'040': 'Wrocław ul. Długa',
-            '007': 'Wrocław ul. Czekoladowa',
-            '024': 'Wałbrzych ul. Długa',
-            '035': 'Lubin ul. Zwierzyckiego',
-            '028': 'Opole ul. Budowlanych',
-            '057': 'Ostrów Wielkopolski',
-            '051': 'Leszno ul. Poznańska',
-            '041': 'Poznań ul. Szwedzka'}
+    response = client.send_get(config.OBI_MARKETS_URL)
+    parser = html.HTMLParser(encoding="utf-8")
+    dom = html.document_fromstring(response.content, parser=parser)
+    markets = json.loads(dom.xpath('//script[@type="application/ld+json"]/text()')[0])
+    return {m['branchCode']: m['name'] for m in markets['hasPOS']}
 
 
 def get_product_details_obi(product_id, market_id):
     header = {'User-Agent': 'Chrome/86.0.4240.198'}
-    response = client.send_get_with_session(config.OBI_PRODUCT_URL.format(market_id, product_id), header)
+    response = client.send_get_with_session(config.OBI_PRODUCT_URL.format(market_id.zfill(3), product_id), header)
     parser = html.HTMLParser(encoding="utf-8")
     dom = html.document_fromstring(response.content, parser=parser)
     element['price'] = float(str(dom.xpath('//strong[@data-ui-name="ads.price.strong"]')[0].text).replace(',', '.'))
-    element['qty'] = re.findall("[0-9]+", str(dom.xpath('//p[@data-ui-name="instore.adp.availability_message"]')[0].text))[0]
+    qnt_info = dom.xpath('//p[@data-ui-name="instore.adp.availability_message"]')
+    element['qty'] = 'N/A'
+    if qnt_info:
+        print(config.OBI_PRODUCT_URL.format(market_id.zfill(3), product_id))
+        qnt = re.findall("[0-9]+", str(qnt_info[0].text))
+        if qnt:
+            element['qty'] = qnt[0]
     element['shippingMethods'] = ['N/A']
     return element

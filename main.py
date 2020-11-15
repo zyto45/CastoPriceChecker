@@ -36,12 +36,14 @@ def validate_input():
         return False
     else:
         window['CHECK'].update(disabled=True)
+        window['OPTION'].update(disabled=True)
+        window['PRODUCT'].update(disabled=True)
         window['MSG'].update('Checking product data...', text_color='green')
         return True
 
 
 while True:
-    event, values = window.read(timeout=10)
+    event, values = window.read(timeout=100)
     if event == sg.WIN_CLOSED or event == 'Cancel':  # if user closes window or clicks cancel
         break
 
@@ -52,7 +54,6 @@ while True:
         else:
             window['MSG'].update('Market\'s list init completed, enter product id', text_color='green')
             window['CHECK'].update(disabled=False)
-            window['PRODUCT'].update('')
             window['PROGRESS'].update(current_count=0, max=len(markets_map))
 
     if event == 'CHECK':
@@ -80,5 +81,7 @@ while True:
             finally:
                 window['GRID'].update(df.values.tolist())
                 window['CHECK'].update(disabled=False)
+                window['OPTION'].update(disabled=False)
+                window['PRODUCT'].update(disabled=False)
 
 window.close()
