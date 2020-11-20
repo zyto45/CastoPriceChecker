@@ -81,7 +81,6 @@ def get_product_details_obi(product_id, market_id):
     qnt_info = dom.xpath('//p[@data-ui-name="instore.adp.availability_message"]')
     element['qty'] = 'N/A'
     if qnt_info:
-        print(config.OBI_PRODUCT_URL.format(market_id.zfill(3), product_id))
         qnt = re.findall("[0-9]+", str(qnt_info[0].text))
         if qnt:
             element['qty'] = qnt[0]
