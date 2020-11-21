@@ -77,7 +77,8 @@ def get_product_details_obi(product_id, market_id):
     response = client.send_get_with_session(config.OBI_PRODUCT_URL.format(market_id.zfill(3), product_id), header)
     parser = html.HTMLParser(encoding="utf-8")
     dom = html.document_fromstring(response.content, parser=parser)
-    element['price'] = float(str(dom.xpath('//strong[@data-ui-name="ads.price.strong"]')[0].text).replace(',', '.'))
+    price = dom.xpath('//strong[@data-ui-name="ads.price.strong"]')
+    if price: element['price'] = float(str(price[0].text).replace(',', '.'))
     qnt_info = dom.xpath('//p[@data-ui-name="instore.adp.availability_message"]')
     element['qty'] = 'N/A'
     if qnt_info:
