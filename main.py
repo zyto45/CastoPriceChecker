@@ -76,7 +76,7 @@ while True:
                 df = pd.DataFrame(df_source)
                 df.sort_values(by='Price', ignore_index=True, inplace=True)
                 window['MSG'].update('Check is done, enter next id', text_color='green')
-            except TypeError:
+            except (TypeError, KeyError):
                 window['MSG'].update('Something went wrong, check product id', text_color='red')
             finally:
                 window['GRID'].update(df.values.tolist())

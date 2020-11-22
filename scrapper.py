@@ -65,7 +65,7 @@ def get_product_details_leroy(product_id, market_id):
     try:
         element['price'] = float(data[0]['storePriceDto']['priceSetDto']['bigPriceDecimal'])
     except IndexError:
-        element['price'] = 999999.99
+        element['price'] = 99999.99
     try:
         element['qty'] = int(data[0]['storeStockDto']['quantity'])
     except IndexError:
@@ -91,7 +91,7 @@ def get_product_details_obi(product_id, market_id):
     try:
         element['price'] = float(str(dom.xpath('//strong[@data-ui-name="ads.price.strong"]')[0].text).replace(',', '.'))
     except IndexError:
-        element['price'] = 999999.99
+        element['price'] = 99999.99
     try:
         element['qty'] = \
             re.findall("[0-9]+", str(dom.xpath('//p[@data-ui-name="instore.adp.availability_message"]')[0].text))[0]
