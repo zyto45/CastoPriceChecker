@@ -42,8 +42,12 @@ def get_product_details_casto(product_id, market_id):
     data = response.json()
     element['price'] = float(data['products'][product_id]['price'])
     element['qty'] = int(data['products'][product_id]['qty'])
-    element['shippingMethods'] = [e[0] for e in data['products'][product_id]['shippingMethods'].items() if
-                                  e[1] is True]
+    try:
+        element['shippingMethods'] = [e[0] for e in data['products'][product_id]['shippingMethods'].items() if
+                                      e[1] is True]
+    except IndexError:
+        element['shippingMethods'] = 'N/A'
+
     return element
 
 
@@ -58,9 +62,16 @@ def get_markets_leroy():
 def get_product_details_leroy(product_id, market_id):
     response = client.send_get(config.LEROY_PRODUCT_URL.format(product_id, market_id))
     data = response.json()
-    element['price'] = float(data[0]['storePriceDto']['priceSetDto']['bigPriceDecimal'])
-    element['qty'] = int(data[0]['storeStockDto']['quantity'])
+    try:
+        element['price'] = float(data[0]['storePriceDto']['priceSetDto']['bigPriceDecimal'])
+    except IndexError:
+        element['price'] = 999999.99
+    try:
+        element['qty'] = int(data[0]['storeStockDto']['quantity'])
+    except IndexError:
+        element['qty'] = -1
     element['shippingMethods'] = ['N/A']
+
     return element
 
 
@@ -77,13 +88,15 @@ def get_product_details_obi(product_id, market_id):
     response = client.send_get_with_session(config.OBI_PRODUCT_URL.format(market_id.zfill(3), product_id), header)
     parser = html.HTMLParser(encoding="utf-8")
     dom = html.document_fromstring(response.content, parser=parser)
-    price = dom.xpath('//strong[@data-ui-name="ads.price.strong"]')
-    if price: element['price'] = float(str(price[0].text).replace(',', '.'))
-    qnt_info = dom.xpath('//p[@data-ui-name="instore.adp.availability_message"]')
-    element['qty'] = 'N/A'
-    if qnt_info:
-        qnt = re.findall("[0-9]+", str(qnt_info[0].text))
-        if qnt:
-            element['qty'] = qnt[0]
+    try:
+        element['price'] = float(str(dom.xpath('//strong[@data-ui-name="ads.price.strong"]')[0].text).replace(',', '.'))
+    except IndexError:
+        element['price'] = 999999.99
+    try:
+        element['qty'] = \
+            re.findall("[0-9]+", str(dom.xpath('//p[@data-ui-name="instore.adp.availability_message"]')[0].text))[0]
+    except IndexError:
+        element['qty'] = -1
     element['shippingMethods'] = ['N/A']
+
     return element
