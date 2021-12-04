@@ -89,7 +89,8 @@ def get_product_details_obi(product_id, market_id):
     parser = html.HTMLParser(encoding="utf-8")
     dom = html.document_fromstring(response.content, parser=parser)
     try:
-        element['price'] = float(str(dom.xpath('//strong[@data-ui-name="ads.price.strong"]')[0].text).replace(',', '.'))
+        element['price'] = float(
+            str(dom.xpath('//strong[@data-ui-name="ads.price.strong"]')[0].text).replace(',', '.').replace(' ', ''))
     except IndexError:
         element['price'] = 99999.99
     try:
