@@ -5,9 +5,9 @@ import re
 import json
 
 element = {
-    'Price': 0.0,
-    'Quantity': 0,
-    'Shipping methods': []
+    'price': 0.0,
+    'quantity': 0,
+    'shippingMethods': []
 }
 
 
@@ -45,7 +45,7 @@ def get_product_details_casto(product_id, market_id):
     try:
         element['shippingMethods'] = [e[0] for e in data['products'][product_id]['shippingMethods'].items() if
                                       e[1] is True]
-    except IndexError:
+    except (IndexError, KeyError):
         element['shippingMethods'] = 'N/A'
 
     return element
@@ -64,11 +64,11 @@ def get_product_details_leroy(product_id, market_id):
     data = response.json()
     try:
         element['price'] = float(data[0]['storePriceDto']['priceSetDto']['bigPriceDecimal'])
-    except IndexError:
+    except (IndexError, KeyError):
         element['price'] = 99999.99
     try:
         element['qty'] = int(data[0]['storeStockDto']['quantity'])
-    except IndexError:
+    except (IndexError, KeyError):
         element['qty'] = -1
     element['shippingMethods'] = ['N/A']
 
@@ -89,14 +89,13 @@ def get_product_details_obi(product_id, market_id):
     parser = html.HTMLParser(encoding="utf-8")
     dom = html.document_fromstring(response.content, parser=parser)
     try:
-        element['price'] = float(
-            str(dom.xpath('//strong[@data-ui-name="ads.price.strong"]')[0].text).replace(',', '.').replace(' ', ''))
-    except IndexError:
+        element['price'] = float(str(dom.xpath('//strong[@data-ui-name="ads.price.strong"]')[0].text).replace(',', '.'))
+    except (IndexError, KeyError):
         element['price'] = 99999.99
     try:
         element['qty'] = \
             re.findall("[0-9]+", str(dom.xpath('//p[@data-ui-name="instore.adp.availability_message"]')[0].text))[0]
-    except IndexError:
+    except (IndexError, KeyError):
         element['qty'] = -1
     element['shippingMethods'] = ['N/A']
 
