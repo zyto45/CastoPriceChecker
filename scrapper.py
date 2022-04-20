@@ -76,7 +76,8 @@ def get_product_details_leroy(product_id, market_id):
 
 
 def get_markets_obi():
-    response = client.send_get(config.OBI_MARKETS_URL)
+    header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.82 Safari/537.36'}
+    response = client.send_get_with_header(config.OBI_MARKETS_URL, header)
     parser = html.HTMLParser(encoding="utf-8")
     dom = html.document_fromstring(response.content, parser=parser)
     markets = json.loads(dom.xpath('//script[@type="application/ld+json"]/text()')[0])
@@ -84,7 +85,7 @@ def get_markets_obi():
 
 
 def get_product_details_obi(product_id, market_id):
-    header = {'User-Agent': 'Chrome/86.0.4240.198'}
+    header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.82 Safari/537.36'}
     response = client.send_get_with_session(config.OBI_PRODUCT_URL.format(market_id.zfill(3), product_id), header)
     parser = html.HTMLParser(encoding="utf-8")
     dom = html.document_fromstring(response.content, parser=parser)
