@@ -40,12 +40,18 @@ def get_markets_casto():
 def get_product_details_casto(product_id, market_id):
     response = client.send_get(config.CASTO_PRODUCT_URL.format(market_id, product_id))
     data = response.json()
-    element['price'] = float(data['products'][product_id]['price'])
-    element['qty'] = int(data['products'][product_id]['qty'])
+    try:
+        element['price'] = float(data['products'][product_id]['price'])
+    except (IndexError, TypeError, KeyError):
+        element['price'] = 9999.999
+    try:
+        element['qty'] = int(data['products'][product_id]['qty'])
+    except (IndexError, TypeError, KeyError):
+        element['qty'] = - 1
     try:
         element['shippingMethods'] = [e[0] for e in data['products'][product_id]['shippingMethods'].items() if
                                       e[1] is True]
-    except (IndexError, KeyError):
+    except (IndexError, TypeError, KeyError):
         element['shippingMethods'] = 'N/A'
 
     return element
